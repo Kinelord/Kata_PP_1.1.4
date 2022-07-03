@@ -38,5 +38,12 @@ public class Util {
         resultSet.next();
         return resultSet.getInt(1) != 0;
     }
+    public void close() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }
