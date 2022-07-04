@@ -10,14 +10,13 @@ import java.util.List;
 public class UserDaoJDBCImpl implements UserDao {
 
     private static final String tableName = "users";
-    private static final Connection connect;
+    private Connection connect;
     // Почему удаляем поле Statement? Разве нельзя было его объявить?
     // Вопрос по открытию поля connect
 
-    static {
+    {
         try {
             connect = Util.getConnection();
-            System.out.println("Соеденение открыто");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
