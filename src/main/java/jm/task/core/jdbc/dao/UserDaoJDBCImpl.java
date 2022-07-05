@@ -11,8 +11,8 @@ public class UserDaoJDBCImpl implements UserDao {
 
     private static final String tableName = "users";
     private Connection connect;
-    // Почему удаляем поле Statement? Разве нельзя было его объявить?
-    // Вопрос по открытию поля connect
+    // РџРѕС‡РµРјСѓ СѓРґР°Р»СЏРµРј РїРѕР»Рµ Statement? Р Р°Р·РІРµ РЅРµР»СЊР·СЏ Р±С‹Р»Рѕ РµРіРѕ РѕР±СЉСЏРІРёС‚СЊ?
+    // Р’РѕРїСЂРѕСЃ РїРѕ РѕС‚РєСЂС‹С‚РёСЋ РїРѕР»СЏ connect
 
     {
         try {
@@ -24,16 +24,18 @@ public class UserDaoJDBCImpl implements UserDao {
 
 
     public void createUsersTable() {
-        String newTable = String.format("CREATE TABLE IF NOT EXISTS %s(user_id INT PRIMARY KEY AUTO_INCREMENT," + "name VARCHAR(30), lastName VARCHAR(50), age INT(3));", tableName);
+        String newTable = String.format("CREATE TABLE IF NOT EXISTS %s" +
+                "(id INT PRIMARY KEY AUTO_INCREMENT," +
+                "name VARCHAR(30), lastName VARCHAR(50), age INT(3));", tableName);
 
         try (Statement statement = connect.createStatement()) {
 
             statement.execute(newTable);
-            System.out.println("Таблица создана");
+            System.out.println("РўР°Р±Р»РёС†Р° СЃРѕР·РґР°РЅР°");
 
 
         } catch (SQLException e) {
-            System.out.println("Ошибка, Таблица уже существует");
+            System.out.println("РћС€РёР±РєР°, РўР°Р±Р»РёС†Р° СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚");
         }
 
     }
@@ -45,11 +47,11 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = connect.createStatement()) {
 
             statement.execute(dropTable);
-            System.out.println("Таблица удалена или ее не существовало");
+            System.out.println("РўР°Р±Р»РёС†Р° СѓРґР°Р»РµРЅР° РёР»Рё РµРµ РЅРµ СЃСѓС‰РµСЃС‚РІРѕРІР°Р»Рѕ");
 
 
         } catch (SQLException e) {
-            System.out.println("Ошибка, Таблицы не существует");
+            System.out.println("РћС€РёР±РєР°, РўР°Р±Р»РёС†С‹ РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚");
         }
     }
 
@@ -58,9 +60,9 @@ public class UserDaoJDBCImpl implements UserDao {
 
         try (PreparedStatement preparedStatement = connect.prepareStatement(insertTable)) {
             preparedStatement.execute();
-            System.out.printf("User с именем - %s добавлен в базу данных\n", name);
+            System.out.printf("User СЃ РёРјРµРЅРµРј - %s РґРѕР±Р°РІР»РµРЅ РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…\n", name);
         } catch (SQLException e) {
-            System.out.println("Ошибка записи в базу данных");
+            System.out.println("РћС€РёР±РєР° Р·Р°РїРёСЃРё РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…");
         }
 
     }
@@ -70,9 +72,9 @@ public class UserDaoJDBCImpl implements UserDao {
 
         try (PreparedStatement preparedStatement = connect.prepareStatement(removeTable)) {
             preparedStatement.execute();
-            System.out.printf("User с номером id - %s удален из базы данных\n", id);
+            System.out.printf("User СЃ РЅРѕРјРµСЂРѕРј id - %s СѓРґР°Р»РµРЅ РёР· Р±Р°Р·С‹ РґР°РЅРЅС‹С…\n", id);
         } catch (SQLException e) {
-            System.out.println("Таблицы не существует");
+            System.out.println("РўР°Р±Р»РёС†С‹ РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚");
         }
 
     }
@@ -84,12 +86,16 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = connect.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
-                User user = new User(resultSet.getLong("user_id"), resultSet.getString("name"), resultSet.getString(3), resultSet.getByte(4));
+                User user = new User();
+                user.setId(resultSet.getLong("id"));
+                user.setName(resultSet.getString("name"));
+                user.setLastName(resultSet.getString(3));
+                user.setAge(resultSet.getByte(4));
                 System.out.println(user);
                 listUser.add(user);
             }
         } catch (SQLException sqlE) {
-            System.out.println("Ошибка вывода из базы данных");
+            System.out.println("РћС€РёР±РєР° РІС‹РІРѕРґР° РёР· Р±Р°Р·С‹ РґР°РЅРЅС‹С…");
         }
         return listUser;
     }
@@ -99,9 +105,9 @@ public class UserDaoJDBCImpl implements UserDao {
 
         try (Statement statement = connect.createStatement()) {
             statement.execute(cleanTable);
-            System.out.println("Таблица очищена");
+            System.out.println("РўР°Р±Р»РёС†Р° РѕС‡РёС‰РµРЅР°");
         } catch (SQLException e) {
-            System.out.println("Очистка несработала");
+            System.out.println("РћС‡РёСЃС‚РєР° РЅРµСЃСЂР°Р±РѕС‚Р°Р»Р°");
         }
 
     }
@@ -109,7 +115,7 @@ public class UserDaoJDBCImpl implements UserDao {
     public void close() {
         try {
             connect.close();
-            System.out.println("Соеденение закрыто");
+            System.out.println("РЎРѕРµРґРµРЅРµРЅРёРµ Р·Р°РєСЂС‹С‚Рѕ");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
