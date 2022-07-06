@@ -104,10 +104,4 @@ public class UserDaoHibernateImpl implements UserDao {
             session.close();
         }
     }
-
-    public void close() {
-        session = HibernateUtil.getSessionFactory().openSession();
-        session.close();
-        HibernateUtil.close();
-    }
 }

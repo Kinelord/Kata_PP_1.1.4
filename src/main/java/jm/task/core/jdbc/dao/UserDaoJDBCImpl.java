@@ -8,32 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-
-    private static final String tableName = "users";
-    private Connection connect;
-    // Почему удаляем поле Statement? Разве нельзя было его объявить?
-    // Вопрос по открытию поля connect
-
-    {
-        try {
-            connect = Util.getConnection();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
     public void createUsersTable() {
-        String newTable = String.format("CREATE TABLE IF NOT EXISTS %s" +
-                "(id INT PRIMARY KEY AUTO_INCREMENT," +
-                "name VARCHAR(30), lastName VARCHAR(50), age INT(3));", tableName);
-
-        try (Statement statement = connect.createStatement()) {
-
-            statement.execute(newTable);
+        try (Connection connect = Util.getConnection();
+             PreparedStatement statement = connect
+                     .prepareStatement("CREATE TABLE IF NOT EXISTS users(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(30), lastName VARCHAR(50), age INT(3));")) {
+            statement.executeUpdate();
             System.out.println("Таблица создана");
-
-
         } catch (SQLException e) {
             System.out.println("Ошибка, Таблица уже существует");
         }
@@ -41,12 +21,9 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void dropUsersTable() {
-
-        String dropTable = String.format("DROP TABLE IF EXISTS %s;", tableName);
-
-        try (Statement statement = connect.createStatement()) {
-
-            statement.execute(dropTable);
+        try (Connection connect = Util.getConnection();
+             PreparedStatement statement = connect.prepareStatement("DROP TABLE IF EXISTS users;")) {
+            statement.executeUpdate();
             System.out.println("Таблица удалена или ее не существовало");
 
 
@@ -56,10 +33,12 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        String insertTable = String.format("INSERT INTO %s(name, lastName, age) " + "VALUES('%s', '%s', %d);", tableName, name, lastName, age);
-
-        try (PreparedStatement preparedStatement = connect.prepareStatement(insertTable)) {
-            preparedStatement.execute();
+        try (Connection connect = Util.getConnection();
+             PreparedStatement preparedStatement = connect.prepareStatement("INSERT INTO users(name, lastName, age) " + "VALUES(?, ?, ?);")) {
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, lastName);
+            preparedStatement.setByte(3, age);
+            preparedStatement.executeUpdate();
             System.out.printf("User с именем - %s добавлен в базу данных\n", name);
         } catch (SQLException e) {
             System.out.println("Ошибка записи в базу данных");
@@ -68,9 +47,9 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void removeUserById(long id) {
-        String removeTable = String.format("DELETE FROM %s WHERE user_id = %d;", tableName, id);
-
-        try (PreparedStatement preparedStatement = connect.prepareStatement(removeTable)) {
+        try (Connection connect = Util.getConnection();
+             PreparedStatement preparedStatement = connect.prepareStatement("DELETE FROM users WHERE id = ?;")) {
+            preparedStatement.setLong(2, id);
             preparedStatement.execute();
             System.out.printf("User с номером id - %s удален из базы данных\n", id);
         } catch (SQLException e) {
@@ -80,11 +59,10 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public List<User> getAllUsers() {
-
         List<User> listUser = new ArrayList<>();
-        String query = String.format("SELECT * FROM %s;", tableName);
-        try (Statement statement = connect.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(query);
+        try (Connection connect = Util.getConnection();
+             PreparedStatement preparedStatement = connect.prepareStatement("SELECT * FROM users;")) {
+            ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 User user = new User();
                 user.setId(resultSet.getLong("id"));
@@ -101,23 +79,13 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void cleanUsersTable() {
-        String cleanTable = String.format("TRUNCATE TABLE %s;", tableName);
-
-        try (Statement statement = connect.createStatement()) {
-            statement.execute(cleanTable);
+        try (Connection connect = Util.getConnection();
+             PreparedStatement statement = connect.prepareStatement("TRUNCATE TABLE users;")) {
+            statement.executeUpdate();
             System.out.println("Таблица очищена");
         } catch (SQLException e) {
             System.out.println("Очистка несработала");
         }
 
-    }
-
-    public void close() {
-        try {
-            connect.close();
-            System.out.println("Соеденение закрыто");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
